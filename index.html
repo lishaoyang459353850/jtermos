@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JTermOS — 基于优化 Linux 内核 + Java 的轻量级终端系统</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg-soft: #121a30;
+    --card: #16203a;
+    --border: #253254;
+    --text: #e8edf7;
+    --muted: #94a3c4;
+    --accent: #4ade80;
+    --accent2: #38bdf8;
+    --accent3: #f59e0b;
+    --code-bg: #0a0f1d;
+    --radius: 14px;
+    --maxw: 1080px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* 背景光晕 */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(700px 400px at 15% -5%, rgba(74, 222, 128, .14), transparent 60%),
+      radial-gradient(700px 400px at 85% 0%, rgba(56, 189, 248, .14), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 22px;
+  }
+
+  /* ---------- Hero ---------- */
+  header.hero {
+    position: relative;
+    z-index: 1;
+    padding: 88px 0 56px;
+    text-align: center;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 74px;
+    height: 74px;
+    margin-bottom: 22px;
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(74,222,128,.2), rgba(56,189,248,.16));
+    border: 1px solid var(--border);
+    font-size: 34px;
+    box-shadow: 0 12px 40px rgba(56, 189, 248, .14);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5.2vw, 3.1rem);
+    line-height: 1.2;
+    letter-spacing: -.02em;
+    font-weight: 800;
+    background: linear-gradient(100deg, #ffffff 10%, var(--accent) 50%, var(--accent2) 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .tagline {
+    margin-top: 16px;
+    font-size: clamp(1rem, 2.2vw, 1.18rem);
+    color: var(--muted);
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 28px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    font-size: .82rem;
+    font-weight: 600;
+    border-radius: 999px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    letter-spacing: .01em;
+  }
+
+  .badge b { color: var(--text); font-weight: 700; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .dot.blue { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+  .dot.amber { background: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
+
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    margin-top: 36px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 24px;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: .94rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    color: #04140a;
+    box-shadow: 0 10px 30px rgba(74, 222, 128, .22);
+  }
+
+  .btn-ghost {
+    background: rgba(255,255,255,.04);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary:hover { box-shadow: 0 14px 38px rgba(74, 222, 128, .34); }
+  .btn-ghost:hover { background: rgba(255,255,255,.08); }
+
+  /* ---------- 区块 ---------- */
+  section { padding: 46px 0; }
+
+  .sec-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 26px;
+  }
+
+  .sec-head .bar {
+    width: 4px;
+    height: 24px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+  }
+
+  h2 {
+    font-size: clamp(1.3rem, 3vw, 1.6rem);
+    font-weight: 800;
+    letter-spacing: -.01em;
+  }
+
+  .lead { color: var(--muted); margin-bottom: 22px; }
+
+  /* ---------- 卡片网格 ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(74, 222, 128, .4);
+    box-shadow: 0 16px 40px rgba(0,0,0,.35);
+  }
+
+  .card .ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: rgba(74, 222, 128, .12);
+    border: 1px solid rgba(74, 222, 128, .22);
+    font-size: 19px;
+    margin-bottom: 13px;
+  }
+
+  .card h3 {
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin-bottom: 7px;
+  }
+
+  .card p {
+    font-size: .89rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* ---------- 表格 ---------- */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,.02);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+    min-width: 460px;
+  }
+
+  th, td {
+    padding: 13px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    background: rgba(255,255,255,.045);
+    font-weight: 700;
+    font-size: .82rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(74, 222, 128, .05); }
+  td:first-child { color: var(--muted); }
+  td:last-child { color: var(--text); font-weight: 600; }
+
+  /* ---------- 代码块 ---------- */
+  .code {
+    position: relative;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 14px 0 6px;
+    overflow: hidden;
+  }
+
+  .code-top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,.025);
+  }
+
+  .code-top .b { width: 10px; height: 10px; border-radius: 50%; }
+  .b1 { background: #ff5f57; } .b2 { background: #febc2e; } .b3 { background: #28c840; }
+
+  .code-top span {
+    margin-left: 8px;
+    font-size: .74rem;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .04em;
+  }
+
+  pre {
+    margin: 0;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .855rem;
+    line-height: 1.72;
+    color: #d8e3f8;
+  }
+
+  pre .c { color: #64748b; }      /* 注释 */
+  pre .k { color: var(--accent); } /* 命令 */
+  pre .s { color: var(--accent3); }/* 字符串/参数 */
+
+  code.inline {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .85em;
+    background: rgba(56, 189, 248, .1);
+    border: 1px solid rgba(56, 189, 248, .2);
+    color: var(--accent2);
+    padding: 2px 7px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  /* ---------- 指标 ---------- */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .metric {
+    text-align: center;
+    padding: 26px 14px;
+    border-radius: var(--radius);
+    background: linear-gradient(160deg, rgba(56,189,248,.09), rgba(74,222,128,.05));
+    border: 1px solid var(--border);
+  }
+
+  .metric .val {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.2;
+  }
+
+  .metric .lbl {
+    margin-top: 8px;
+    font-size: .82rem;
+    color: var(--muted);
+  }
+
+  /* ---------- 列表 ---------- */
+  ul.clean { list-style: none; display: grid; gap: 10px; }
+
+  ul.clean li {
+    position: relative;
+    padding-left: 26px;
+    font-size: .92rem;
+    color: var(--muted);
+  }
+
+  ul.clean li::before {
+    content: "▸";
+    position: absolute;
+    left: 6px;
+    color: var(--accent);
+    font-size: .9rem;
+  }
+
+  ul.clean li b { color: var(--text); }
+
+  ul.warn li::before { content: "▲"; color: var(--accent3); font-size: .72rem; left: 5px; }
+
+  /* ---------- 页脚 ---------- */
+  footer {
+    position: relative;
+    z-index: 1;
+    margin-top: 40px;
+    padding: 40px 0 54px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: .87rem;
+  }
+
+  footer a { color: var(--accent2); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 600px) {
+    header.hero { padding: 56px 0 36px; }
+    section { padding: 34px 0; }
+    pre { font-size: .79rem; padding: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="logo">☕</div>
+    <h1>JTermOS</h1>
+    <p class="tagline">
+      基于优化 Linux 内核 + Java 的轻量级可引导终端系统。<br>
+      裁剪内核 · jlink 精简 JRE · squashfs 只读根 · BIOS/EFI 双引导。
+    </p>
+
+    <div class="badges">
+      <span class="badge"><i class="dot"></i><b>ISO ~28 MB</b></span>
+      <span class="badge"><i class="dot blue"></i>启动 <b>&lt; 5s</b></span>
+      <span class="badge"><i class="dot amber"></i>OpenJDK <b>17</b></span>
+      <span class="badge"><i class="dot blue"></i>GRUB <b>2.06</b></span>
+      <span class="badge"><i class="dot"></i>BIOS + <b>EFI</b></span>
+    </div>
+
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/lishaoyang459353850/jtermos" target="_blank" rel="noopener">
+        ⬇ 获取项目
+      </a>
+      <a class="btn btn-ghost" href="#quickstart">快速开始</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- 概览 -->
+  <section id="overview">
+    <div class="sec-head"><div class="bar"></div><h2>概览</h2></div>
+    <p class="lead">
+      JTermOS 将裁剪后的 Linux 内核、BusyBox 根文件系统、jlink 精简 JRE 与 squashfs 只读根文件系统
+      打包为单个 ISO 镜像。系统启动后 Java 应用自动运行，崩溃后在 5 秒内自动重启，
+      无需完整桌面发行版，也无需 X11 / Wayland。
+    </p>
+    <p class="lead" style="margin-bottom:0">
+      整个构建流程由编号脚本编排，从内核编译、BusyBox 组装、rootfs 覆盖、JRE 裁剪、
+      库依赖扫描、服务安装到镜像打包，全部可复现、可审计。
+    </p>
+  </section>
+
+  <!-- 核心亮点 -->
+  <section id="features">
+    <div class="sec-head"><div class="bar"></div><h2>核心亮点</h2></div>
+    <div class="grid">
+      <div class="card">
+        <div class="ico">📦</div>
+        <h3>极小镜像</h3>
+        <p>ISO 约 28 MB，rootfs.squashfs 约 30–60 MB。squashfs 压缩只读根，体积与一致性兼得。</p>
+      </div>
+      <div class="card">
+        <div class="ico">⚡</div>
+        <h3>快速启动</h3>
+        <p>从 GRUB 到可用 shell 不足 5 秒。内核裁剪 + 精简 init + 静态 BusyBox 共同压缩启动路径。</p>
+      </div>
+      <div class="card">
+        <div class="ico">☕</div>
+        <h3>Java 一等公民</h3>
+        <p>预置 Eclipse Temurin OpenJDK 17，通过 jlink 定制 JRE，仅保留应用实际依赖的模块，约 40 MB。</p>
+      </div>
+      <div class="card">
+        <div class="ico">🧩</div>
+        <h3>运行库完整</h3>
+        <p>预置 libc、libm、libpthread、libdl、libjli、libjava、libnio、libzip、libnss 等，避免运行期缺库。</p>
+      </div>
+      <div class="card">
+        <div class="ico">🔁</div>
+        <h3>自启动与自恢复</h3>
+        <p>Java 应用开机自动拉起，异常退出后 5 秒内自动重启，适合无人值守终端设备。</p>
+      </div>
+      <div class="card">
+        <div class="ico">🛡️</div>
+        <h3>只读根文件系统</h3>
+        <p>squashfs 提升安全性与一致性，运行时数据可放 tmpfs 或 overlay，重启即恢复出厂状态。</p>
+      </div>
+      <div class="card">
+        <div class="ico">🧭</div>
+        <h3>双引导支持</h3>
+        <p>GRUB 2.06 同时支持 BIOS 与传统 UEFI 设备，U 盘启动开箱即用。</p>
+      </div>
+      <div class="card">
+        <div class="ico">🖥️</div>
+        <h3>内置信息工具</h3>
+        <p>预装 fastfetch 与 neofetch，进入 shell 即可快速查看系统与硬件状态。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 组件版本 -->
+  <section id="stack">
+    <div class="sec-head"><div class="bar"></div><h2>组件版本</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>组件</th><th>版本 / 选型</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>引导加载器</td><td>GRUB 2.06</td><td>BIOS + EFI 双引导</td></tr>
+          <tr><td>Linux 内核</td><td>5.15 LTS / 6.6</td><td>增量配置裁剪</td></tr>
+          <tr><td>根文件系统</td><td>BusyBox 静态</td><td>约 250 KB</td></tr>
+          <tr><td>Java 运行时</td><td>Temurin OpenJDK 17</td><td>jlink 定制 JRE</td></tr>
+          <tr><td>根文件系统镜像</td><td>squashfs</td><td>只读压缩</td></tr>
+          <tr><td>镜像格式</td><td>ISO</td><td>QEMU 直接启动</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 快速开始 -->
+  <section id="quickstart">
+    <div class="sec-head"><div class="bar"></div><h2>快速开始</h2></div>
+
+    <h3 style="font-size:1rem;margin-bottom:4px">① QEMU 直接运行</h3>
+    <div class="code">
+      <div class="code-top"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><span>bash</span></div>
+<pre><span class="c"># 从 Release 页面下载 jtermos.iso 后执行</span>
+<span class="k">qemu-system-x86_64</span> -m 512M -cdrom jtermos.iso -nographic
+
+<span class="c"># 启动后按回车进入 shell，输入 fastfetch 查看系统信息</span></pre>
+    </div>
+
+    <h3 style="font-size:1rem;margin:24px 0 4px">② 从源码构建</h3>
+    <div class="code">
+      <div class="code-top"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><span>bash</span></div>
+<pre><span class="k">git</span> clone https://github.com/lishaoyang459353850/jtermos.git
+<span class="k">cd</span> jtermos
+<span class="k">./build.sh</span> all</pre>
+    </div>
+
+    <h3 style="font-size:1rem;margin:24px 0 4px">③ 写入 U 盘并在物理机启动</h3>
+    <div class="code">
+      <div class="code-top"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><span>bash</span></div>
+<pre><span class="c"># 将 /dev/sdX 替换为你的 U 盘设备，注意不要写错盘符</span>
+<span class="k">sudo dd</span> if=jtermos.iso of=/dev/sdX bs=4M status=progress oflag=sync</pre>
+    </div>
+    <p style="font-size:.85rem;color:var(--muted);margin-top:10px">
+      提示：Secure Boot 需关闭或自行签名；BIOS 与传统 UEFI 均可引导。
+    </p>
+  </section>
+
+  <!-- 性能指标 -->
+  <section id="metrics">
+    <div class="sec-head"><div class="bar"></div><h2>性能指标</h2></div>
+    <div class="metrics">
+      <div class="metric"><div class="val">~28 MB</div><div class="lbl">ISO 大小</div></div>
+      <div class="metric"><div class="val">&lt; 5 s</div><div class="lbl">启动到 shell</div></div>
+      <div class="metric"><div class="val">90–120 MB</div><div class="lbl">JVM RSS</div></div>
+      <div class="metric"><div class="val">≤ 5 s</div><div class="lbl">崩溃恢复</div></div>
+      <div class="metric"><div class="val">512 MB</div><div class="lbl">建议运行内存</div></div>
+    </div>
+  </section>
+
+  <!-- 适用场景 -->
+  <section id="usecases">
+    <div class="sec-head"><div class="bar"></div><h2>适用场景</h2></div>
+    <div class="grid">
+      <div class="card">
+        <div class="ico">🏭</div>
+        <h3>嵌入式 Java 终端</h3>
+        <p>在资源受限硬件上运行 Java 应用，无需引入完整桌面发行版的重量。</p>
+      </div>
+      <div class="card">
+        <div class="ico">🎬</div>
+        <h3>快速演示环境</h3>
+        <p>把自定义 Java 应用打进 ISO，插上 U 盘或通过 QEMU 即可现场演示。</p>
+      </div>
+      <div class="card">
+        <div class="ico">📚</div>
+        <h3>构建学习与教学</h3>
+        <p>内核裁剪、BusyBox、jlink、squashfs、GRUB 全流程脚本化，是完整的实战案例。</p>
+      </div>
+      <div class="card">
+        <div class="ico">🔬</div>
+        <h3>CI/CD Java 沙箱</h3>
+        <p>用最小 JRE 构建隔离的 Java 执行环境，启动快、依赖少、易清理。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 已知限制 -->
+  <section id="limits">
+    <div class="sec-head"><div class="bar"></div><h2>已知限制</h2></div>
+    <ul class="clean warn">
+      <li>默认根文件系统为只读 squashfs，<b>持久化写入需配置 overlay 或 tmpfs</b>。</li>
+      <li>jlink 定制 JRE 仅包含常用模块；应用若依赖额外模块，需用 <code class="inline">jdeps</code> 分析后重新生成。</li>
+      <li>物理机兼容性依赖硬件；缺少驱动时需在内核配置中追加对应选项。</li>
+      <li>Secure Boot 未签名，需在固件中关闭或导入自定义密钥。</li>
+      <li>生产环境请修改默认登录配置，并启用必要的安全策略。</li>
+    </ul>
+  </section>
+
+  <!-- 目录结构 -->
+  <section id="layout">
+    <div class="sec-head"><div class="bar"></div><h2>项目结构</h2></div>
+    <div class="code">
+      <div class="code-top"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><span>tree</span></div>
+<pre>jtermos/
+├── build.sh                  <span class="c"># 一键构建总入口</span>
+├── configs/
+│   ├── jterm-kernel.fragment <span class="c"># 内核增量配置</span>
+│   ├── genimage.cfg          <span class="c"># 分区/镜像定义</span>
+│   ├── grub.cfg              <span class="c"># GRUB 启动菜单</span>
+│   └── boot.cmd              <span class="c"># U-Boot 备选启动脚本</span>
+├── scripts/
+│   ├── 00-env.sh             <span class="c"># 环境变量</span>
+│   ├── 10-kernel.sh          <span class="c"># 编译内核</span>
+│   ├── 20-busybox.sh         <span class="c"># 编译 BusyBox</span>
+│   ├── 30-rootfs.sh          <span class="c"># 组装 rootfs</span>
+│   ├── 40-jlink.sh           <span class="c"># jlink 裁剪 JRE</span>
+│   ├── 50-copy-libs.sh       <span class="c"># ldd/readelf 扫库拷贝</span>
+│   ├── 60-services.sh        <span class="c"># 安装 init/服务脚本</span>
+│   ├── 70-image.sh           <span class="c"># 打 squashfs + ISO</span>
+│   └── grub-install.sh       <span class="c"># 生成 EFI GRUB</span>
+├── rootfs-overlay/           <span class="c"># 直接覆盖到 rootfs</span>
+└── app/
+    └── app.jar               <span class="c"># 放你的 Java 应用</span></pre>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="https://github.com/lishaoyang459353850/jtermos" target="_blank" rel="noopener">源码仓库</a>
+      <a href="https://github.com/lishaoyang459353850/jtermos/releases" target="_blank" rel="noopener">下载 Release</a>
+      <a href="https://github.com/lishaoyang459353850/jtermos/issues" target="_blank" rel="noopener">问题反馈</a>
+    </div>
+    <p>JTermOS · 基于优化 Linux 内核 + Java 的轻量级终端系统</p>
+  </div>
+</footer>
+
+</body>
+</html>
