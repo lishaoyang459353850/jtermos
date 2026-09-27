@@ -1,0 +1,12 @@
+#!/bin/sh
+case "$1" in
+  start)
+    for i in 1 2 3 4 5; do
+      [ -d /sys/class/net/eth0 ] && break
+      sleep 0.2
+    done
+    /sbin/udhcpc -i eth0 -b -t 5 -n -q \
+       -s /usr/share/udhcpc/default.script 2>/dev/null &
+    ;;
+esac
+exit 0

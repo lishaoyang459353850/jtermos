@@ -1,0 +1,12 @@
+#!/bin/sh
+case "$1" in
+  start)
+    [ -f /data/urandom-seed ] && cat /data/urandom-seed > /dev/urandom
+    ;;
+  stop)
+    umask 077
+    dd if=/dev/urandom of=/data/urandom-seed bs=1 count=128 2>/dev/null
+    sync
+    ;;
+esac
+exit 0
