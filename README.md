@@ -1,5 +1,5 @@
 # JTermOS —— 带 GRUB 的轻量级 Linux 终端系统
-**9.27更新，官网**jtermos.webside.ccwu.cc
+**9.27更新，官网**[jtermos.webside.ccwu.cc](https://jtermos.webside.ccwu.cc/)
 ## 这是什么
 
 从零构建的轻量可引导 Linux 终端系统：
