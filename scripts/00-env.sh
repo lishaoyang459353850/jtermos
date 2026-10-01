@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # 00-env.sh
-source "$(dirname "$0")/00-env.sh"
 JTERMOS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export JTERMOS_ROOT
 export DL_DIR="${JTERMOS_ROOT}/dl"
