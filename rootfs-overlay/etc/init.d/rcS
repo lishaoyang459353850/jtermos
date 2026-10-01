@@ -7,7 +7,7 @@ echo /sbin/mdev > /proc/sys/kernel/hotplug
 /sbin/mdev -s
 /bin/mount -a
 /bin/hostname -F /etc/hostname
-/sbin/ifconfig lo 127.0.0.1 up
+/bin/ifconfig lo 127.0.0.1 up
 dmesg -n 3 2>/dev/null || true
 echo "========================================"
 grep PRETTY_NAME /etc/os-release

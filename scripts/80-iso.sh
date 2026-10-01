@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # 80-iso.sh —— 打包可启动 ISO（x86_64，GRUB BIOS + EFI 双引导）
 #
-# ⚠️⚠️ 关键：必须带 -R（Rock Ridge）+ -J（Joliet）⚠️⚠️
-#   否则 ISO9660 会把长文件名截断成 8.3 短名（大小写也变）：
-#     initramfs.cpio.gz → INITRAMF.GZ
-#     bzImage           → BZIMAGE
-#     i386-pc           → I386_PC
-#     x86_64-efi        → X86_64_E
-#   GRUB 按 grub.cfg 里的原文件名（initramfs.cpio.gz / bzImage）找不到文件，
-#   就会卡在 "Loading initramfs..." 不动 —— 这正是「卡住加载」的根因。
+# 打包时带 -R（Rock Ridge）+ -J（Joliet），保证 /boot 下的长文件名
+# （initramfs.cpio.gz / bzImage）在 ISO9660 里不被截断。
+#
+# 注：实测原版 ISO 的 Rock Ridge 长文件名本来就是好的，GRUB 能找到 bzImage /
+# initramfs.cpio.gz 并正常引导 —— 之前把「卡住加载」归因到 8.3 文件名截断是错的。
+# 真正的原因是 rootfs-overlay / grub.cfg 里的几个小问题：
+#   · inittab 里 getty 路径与 busybox 实际安装位置不一致（一直报 can't run getty）
+#   · grub.cfg 的 console= 顺序写反，shell 跑到了串口而不是屏幕
+#   · rcS 里 ifconfig 的软链接是坏的
+#   · rootfs 里缺 /bin/login，passwd 里 root 又是 shadow 占位（登录不进去）
+# 这些已在 rootfs-overlay/ 与 configs/grub.cfg 里修掉。
 #
 # 期望的 boot 目录结构（x86_64）：
 #   boot/
