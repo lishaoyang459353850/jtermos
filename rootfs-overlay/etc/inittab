@@ -1,4 +1,4 @@
-# /etc/inittab
+# /etc/inittab  —— JTermOS 1.0 beta1
 ::sysinit:/etc/init.d/rcS
 ::respawn:/bin/getty -L ttyS0 115200 vt100
 ::askfirst:-/bin/sh

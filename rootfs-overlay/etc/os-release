@@ -1,4 +1,4 @@
 NAME="JTermOS"
-VERSION="1.0"
+VERSION="1.0-beta1"
 ID=jtermos
-PRETTY_NAME="JTermOS 1.0 (GNU/Linux x86_64)"
+PRETTY_NAME="JTermOS 1.0 beta1 (x86_64)"

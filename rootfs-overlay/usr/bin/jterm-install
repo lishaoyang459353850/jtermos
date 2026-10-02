@@ -1,0 +1,21 @@
+#!/bin/sh
+# JTermOS 终端安装程序：把当前光盘里的系统原样写到目标磁盘
+echo ""
+echo "JTermOS 安装程序"
+echo "------------------------------------------"
+i=0
+for d in /dev/sd? /dev/vd? /dev/nvme?n?; do
+    [ -b "$d" ] || continue
+    i=$((i+1))
+    sz=$(cat /sys/block/$(basename $d)/size 2>/dev/null)
+    echo "  [$i] $d   $((sz/2048)) MB"
+    eval "DISK_$i=$d"
+done
+[ "$i" = "0" ] && { echo "未发现可安装磁盘"; exit 1; }
+printf "选择目标磁盘编号: "; read n
+eval "TGT=\$DISK_$n"
+[ -b "$TGT" ] || { echo "无效选择"; exit 1; }
+printf "将清空 %s 的全部数据，确认？(yes/no) " "$TGT"; read c
+[ "$c" = "yes" ] || { echo "已取消"; exit 1; }
+echo "正在写入 $TGT ..."
+dd if=/dev/cdrom of="$TGT" bs=4M status=none && echo "完成。重启即可从该盘启动。"

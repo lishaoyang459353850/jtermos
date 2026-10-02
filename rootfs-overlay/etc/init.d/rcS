@@ -1,5 +1,6 @@
 #!/bin/sh
-# /etc/init.d/rcS
+# /etc/init.d/rcS  —— JTermOS 1.0 beta1
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 /bin/mount -t proc     proc /proc
 /bin/mount -t sysfs    sysfs /sys
 /bin/mount -t devtmpfs dev  /dev
@@ -8,11 +9,20 @@ echo /sbin/mdev > /proc/sys/kernel/hotplug
 /bin/mount -a
 /bin/hostname -F /etc/hostname
 /bin/ifconfig lo 127.0.0.1 up
-dmesg -n 3 2>/dev/null || true
-echo "========================================"
-grep PRETTY_NAME /etc/os-release
-echo " Kernel: $(uname -r)"
-echo "========================================"
+dmesg -n 7 2>/dev/null || true
+
+# ===== 开机画面：图形标志 + JTermOS 字样 + 内核日志 =====
+printf '\033[2J\033[H'
+[ -f /etc/jterm-banner.txt ] && cat /etc/jterm-banner.txt
+echo ""
+echo "    JTermOS 1.0 beta1   |   Linux $(uname -r) $(uname -m)"
+echo "    ================================================"
+echo "    内核启动日志："
+dmesg | tail -n 16
+echo "    ================================================"
+echo "    输入 fastfetch 查看系统信息；输入 jterm-install 启动安装程序"
+echo ""
+
 for script in /etc/init.d/S[0-9]*; do
     [ -x "$script" ] && "$script" start
 done
