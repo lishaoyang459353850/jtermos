@@ -1,5 +1,5 @@
 # JTermOS —— 带 GRUB 的轻量级 Linux 终端系统
-**我们目前已经停止了支持，如果想获得后续支持，请访问：[https://pan.quark.cn/s/00d41f4bcaf2](https://pan.quark.cn/s/a9574af08859)
+**我们目前已经停止了支持，如果想获得后续支持，请访问：[https://pan.quark.cn/s/00d41f4bcaf2](https://pan.quark.cn/s/a9574af08859)**
 **1.0 beta1** ｜ 官网 [jtermos.webside.ccwu.cc](https://jtermos.webside.ccwu.cc/)
 
 ## 这是什么
